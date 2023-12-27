@@ -1,0 +1,62 @@
+trigger: 
+ branches:
+   include:
+     - main
+
+pool:
+  vmImage: ubuntu-lastest
+
+variables:
+  bkstrgrg: 'terraform-tfstate'
+  bkstrg: 'ndhoangtfstate'
+  bkcontainer: 'azuredevops-state-file'
+  bkstrgkey: 'devpipline.terraform.tfstate'
+
+stages:
+  - stage: tfvalidate
+    jobs: 
+      - job: validate
+        continueOnError: false
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
+              backendAzureRmResourceGroupName: '$(bkstrgrg)'
+              backendAzureRmStorageAccountName: '$(bkstrg)'
+              backendAzureRmContainerName: '$(bkcontainer)'
+              backendAzureRmKey: '$(bkstrgkey)'
+          - task: TerraformTaskV4@4
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+  - stage: tfdeploy
+    condition: succeeded ('tfvalidate')
+    dependsOn: tfvalidate
+    jobs:
+      - job: apply
+        steps: 
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
+              backendAzureRmResourceGroupName: '$(bkstrgrg)'
+              backendAzureRmStorageAccountName: '$(bkstrg)'
+              backendAzureRmContainerName: '$(bkcontainer)'
+              backendAzureRmKey: '$(bkstrgkey)'
+          - task: TerraformTaskV4@4
+            displayName: apply
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
