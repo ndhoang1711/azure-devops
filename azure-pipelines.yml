@@ -77,8 +77,6 @@ stages:
     displayName: TF-Apply
     jobs:
       - job: Apply
-        pool:
-          vmImage: ubuntu-latest
         steps:
           - task: TerraformInstaller@1
             inputs:
