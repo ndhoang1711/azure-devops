@@ -6,7 +6,7 @@ trigger:
 pool:
   name: Default
   vmImage: ubuntu-latest
-  
+
 variables:
   bkstrgrg: 'terraform-tfstate'
   bkstrg: 'ndhoangtfstate'
@@ -36,12 +36,50 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'validate'
-  - stage: tfdeploy
+  - stage: tfplan
     condition: succeeded ('tfvalidate')
     dependsOn: tfvalidate
     jobs:
-      - job: apply
+      - job: plan
         steps: 
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
+              backendAzureRmResourceGroupName: '$(bkstrgrg)'
+              backendAzureRmStorageAccountName: '$(bkstrg)'
+              backendAzureRmContainerName: '$(bkcontainer)'
+              backendAzureRmKey: '$(bkstrgkey)'
+          - task: TerraformTaskV4@4
+            displayName: plan
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
+  - stage: Approve
+    displayName: Approve
+    jobs:
+      - job: approve
+        displayName: Wait for approval
+        pool: Default
+        steps:
+          - task: ManualValidation@0
+            timeoutInMinutes: 60
+            inputs:
+              notifyUsers: 'hoang.nguyen@datalogic.com'
+              instructions: 'Review the plan in the next hour'
+  - stage: Apply
+    displayName: TF-Apply
+    jobs:
+      - job: Apply
+        pool:
+          vmImage: ubuntu-latest
+        steps:
           - task: TerraformInstaller@1
             inputs:
               terraformVersion: 'latest'
@@ -59,5 +97,6 @@ stages:
             displayName: apply
             inputs:
               provider: 'azurerm'
-              command: 'plan'
+              command: 'apply'
               environmentServiceNameAzureRM: 'Pay-as-you-go(ff064279-f4bc-47a0-a8be-58ce33a49e9f)'
+              commandOptions: '-auto-approve'
