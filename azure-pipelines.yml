@@ -4,8 +4,9 @@ trigger:
      - main
 
 pool:
-  vmImage: ubuntu-lastest
-
+  name: Default
+  vmImage: ubuntu-latest
+  
 variables:
   bkstrgrg: 'terraform-tfstate'
   bkstrg: 'ndhoangtfstate'
