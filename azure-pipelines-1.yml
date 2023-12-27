@@ -19,7 +19,6 @@ stages:
   - stage: tfdestroy
     jobs: 
       - job: Destroy
-        continueOnError: false
         steps:
           - task: TerraformInstaller@1
             inputs:
@@ -35,12 +34,8 @@ stages:
               backendAzureRmContainerName: '$(bkcontainer)'
               backendAzureRmKey: '$(bkstrgkey)'
           - task: TerraformTaskV4@4
-            displayName: plan
-            inputs:
-              provider: 'azurerm'
-              command: 'plan'
-          - task: TerraformTaskV4@4
             displayName: destroy
             inputs:
               provider: 'azurerm'
               command: 'destroy'
+              commandOptions: '-auto-approve'
