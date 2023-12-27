@@ -10,7 +10,7 @@ variables:
   bkstrgrg: 'terraform-tfstate'
   bkstrg: 'ndhoangtfstate'
   bkcontainer: 'azuredevops-state-file'
-  bkstrgkey: 'devpipline.terraform.tfstate'
+  bkstrgkey: 'devpipeline.terraform.tfstate'
 
 stages:
   - stage: tfvalidate
